@@ -1,13 +1,9 @@
 import streamlit as st
 
-
-import streamlit as st
-
 st.set_page_config(page_title="Fake News Detector", page_icon="📰")
 
 st.title("📰 Fake News Detection App")
 st.write("Enter a headline and article text, and the app will predict whether it appears Real or Fake.")
-
 
 # -----------------------------
 # SIMPLE RULE-BASED CLASSIFIER
@@ -38,7 +34,6 @@ def classify_news(headline, article):
 
     return prediction, reasoning
 
-
 # -----------------------------
 # STREAMLIT INPUT AREA
 # -----------------------------
@@ -46,15 +41,13 @@ st.header("📝 Enter News Content")
 
 headline = st.text_input("News Headline")
 article = st.text_area("Article Text", height=200)
-‘
+
 if st.button("Analyze"):
     if not headline.strip() or not article.strip():
         st.warning("Please enter both a headline and article text.")
     else:
-        # run the classifier
         prediction, reasoning = classify_news(headline, article)
 
-        # Display results
         st.subheader("🔍 Prediction")
         if prediction == "Fake":
             st.error("❌ FAKE")
@@ -73,14 +66,13 @@ if st.button("Analyze"):
         - Check if credible sources are reporting the same information  
         """)
 
-        # External Sources (clickable)
         st.subheader("🔗 External Fact-Checking Sources")
         st.markdown("""
-        - [Snopes](https://www.snopes.com/)  
-        - [PolitiFact](https://www.politifact.com/)  
-        - [Reuters Fact Check](https://www.reuters.com/fact-check/)  
-        - [AFP Fact Check](https://factcheck.afp.com/)  
-        - [Google Fact Check Explorer](https://toolbox.google.com/factcheck/explorer)  
+        - Snopes (https://www.snopes.com/)  
+        - PolitiFact (https://www.politifact.com/)  
+        - Reuters Fact Check (https://www.reuters.com/fact-check/)  
+        - AFP Fact Check (https://factcheck.afp.com/)  
+        - Google Fact Check Explorer (https://toolbox.google.com/factcheck/explorer)  
         """)
 
         st.info("This is a simple rule-based model. For real accuracy, connect a trained ML model.")
