@@ -3,76 +3,119 @@ import streamlit as st
 st.set_page_config(page_title="Fake News Detector", page_icon="📰")
 
 st.title("📰 Fake News Detection App")
-st.write("Enter a headline and article text, and the app will predict whether it appears Real or Fake.")
+st.write("Choose input type and analyze whether the content seems Real or Fake.")
 
 # -----------------------------
 # SIMPLE RULE-BASED CLASSIFIER
 # -----------------------------
-def classify_news(headline, article):
-    text = (headline + " " + article).lower()
+def classify_news(text):
+    text = text.lower()
 
     fake_keywords = [
-        "shocking", "secret", "breaking!!!", "miracle", 
+        "shocking", "secret", "breaking!!!", "miracle",
         "unbelievable", "banned", "hidden truth", "exposed",
         "100% guarantee", "cure", "conspiracy"
     ]
 
-    score = 0
-    for word in fake_keywords:
-        if word in text:
-            score += 1
+    score = sum(word in text for word in fake_keywords)
 
     if score >= 2:
-        prediction = "Fake"
-        reasoning = "The text contains multiple suspicious or sensational keywords commonly used in misleading content."
+        return "Fake"
     elif score == 1:
-        prediction = "Possibly Fake"
-        reasoning = "The text contains at least one sensational keyword, which may indicate misinformation."
+        return "Possibly Fake"
     else:
-        prediction = "Real"
-        reasoning = "No major signs of sensational or misleading keywords were detected in the text."
+        return "Real"
 
-    return prediction, reasoning
 
 # -----------------------------
 # STREAMLIT INPUT AREA
 # -----------------------------
-st.header("📝 Enter News Content")
+st.header("📝 Select Input Type")
+choice = st.radio("Select what you want to enter:", ["Headline Only", "Full Article"])
 
-headline = st.text_input("News Headline")
-article = st.text_area("Article Text", height=200)
+headline = ""
+article = ""
+
+if choice == "Headline Only":
+    headline = st.text_input("Enter News Headline")
+else:
+    headline = st.text_input("Headline (optional)")
+    article = st.text_area("Enter Full Article Text", height=180)
 
 if st.button("Analyze"):
-    if not headline.strip() or not article.strip():
-        st.warning("Please enter both a headline and article text.")
-    else:
-        prediction, reasoning = classify_news(headline, article)
+    combined_text = (headline + " " + article).strip()
 
-        st.subheader("🔍 Prediction")
+    if not combined_text:
+        st.warning("⚠ Please enter some text first.")
+    else:
+        prediction = classify_news(combined_text)
+
+        # -----------------------------
+        # DYNAMIC REASONING & ADVICE
+        # -----------------------------
         if prediction == "Fake":
-            st.error("❌ FAKE")
+            reasoning = "The text contains several sensational or misleading keywords, which indicate a high likelihood of misinformation."
+            advice = """
+            ❌ **Advice if Fake:**  
+            - Immediately verify using trusted fact-checking sites  
+            - Do NOT share this information unless verified  
+            - Look for official government or credible news sources  
+            """
+
+            sources = """
+            - [Alt News](https://www.altnews.in/)  
+            - [BOOM Fact Check](https://www.boomlive.in/)  
+            - [Factly](https://factly.in/)  
+            """
+
+        elif prediction == "Possibly Fake":
+            reasoning = "At least one suspicious keyword is detected. It may or may not be accurate, but requires verification."
+            advice = """
+            ⚠ **Advice if Possibly Fake:**  
+            - Cross-check with multiple reliable news outlets  
+            - Check publication time and author credibility  
+            - Search if reputed media outlets covered the same story  
+            """
+
+            sources = """
+            - [Google Fact Check Explorer](https://toolbox.google.com/factcheck/explorer)  
+            - [Snopes](https://www.snopes.com/)  
+            """
+
+        else:
+            reasoning = "There are no common signals of misinformation or exaggerated keywords detected."
+            advice = """
+            ✔ **Advice if Real:**  
+            - Still check original source for any updates  
+            - Share responsibly from official/reputed outlets  
+            - Verify facts from authentic government or national agencies  
+            """
+
+            sources = """
+            - [Reuters Official News](https://www.reuters.com/)  
+            - [BBC News](https://www.bbc.com/)  
+            - [The Hindu](https://www.thehindu.com/)  
+            """
+
+        # -----------------------------
+        # DISPLAY RESULTS
+        # -----------------------------
+        st.subheader("🔍 Prediction")
+
+        if prediction == "Fake":
+            st.error("❌ FAKE NEWS")
         elif prediction == "Possibly Fake":
             st.warning("⚠️ POSSIBLY FAKE")
         else:
-            st.success("✔️ REAL")
+            st.success("✔ REAL NEWS")
 
         st.subheader("🧠 Reasoning")
         st.write(reasoning)
 
-        st.subheader("💡 Advice")
-        st.write("""
-        - Verify the claim using trusted fact-checking organizations  
-        - Avoid sharing content without confirming accuracy  
-        - Check if credible sources are reporting the same information  
-        """)
+        st.subheader("💡 Smart Advice")
+        st.write(advice)
 
-        st.subheader("🔗 External Fact-Checking Sources")
-        st.markdown("""
-        - Snopes (https://www.snopes.com/)  
-        - PolitiFact (https://www.politifact.com/)  
-        - Reuters Fact Check (https://www.reuters.com/fact-check/)  
-        - AFP Fact Check (https://factcheck.afp.com/)  
-        - Google Fact Check Explorer (https://toolbox.google.com/factcheck/explorer)  
-        """)
+        st.subheader("🔗 Trusted Verification Sources")
+        st.markdown(sources)
 
-        st.info("This is a simple rule-based model. For real accuracy, connect a trained ML model.")
+        st.info("This rule-based model is for demonstration. Connect ML model for real accuracy.")
