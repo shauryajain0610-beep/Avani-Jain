@@ -6,14 +6,14 @@ from Orange.preprocess.text import preprocess_strings
 from Orange.classification import NaiveBayesLearner
 
 # ------------------------------------------------------------
-# LOAD AND PREPARE DATA (SAMPLED TO PREVENT SLOW TRAINING)
+# LOAD AND PREPARE DATA (RELATIVE PATHS + SAMPLED FOR SPEED)
 # ------------------------------------------------------------
 def load_orange_model():
-    # Load CSVs from your folder structure
-    fake = pd.read_csv(r"C:\fake_news_app\data\Fake.csv")
-    true = pd.read_csv(r"C:\fake_news_app\data\True.csv")
+    # Load CSVs using relative paths (works on GitHub / Streamlit Cloud)
+    fake = pd.read_csv("data/Fake.csv")
+    true = pd.read_csv("data/True.csv")
 
-    # Optional: sample to reduce size for Orange Naive Bayes
+    # Sample dataset if too large (prevents slow training on cloud)
     fake = fake.sample(n=1000, random_state=42) if len(fake) > 1000 else fake
     true = true.sample(n=1000, random_state=42) if len(true) > 1000 else true
 
@@ -39,7 +39,7 @@ def load_orange_model():
 
     return domain, nb_model
 
-# Load Orange model (runs once)
+# Load Orange model once
 domain, nb_model = load_orange_model()
 
 # ------------------------------------------------------------
@@ -49,7 +49,7 @@ def orange_predict(user_text):
     processed = preprocess_strings([user_text])
     test_table = Table(domain, processed)
     pred = nb_model(test_table)
-    return str(pred[0].value)  # ensure 'FAKE' or 'REAL'
+    return str(pred[0].value)  # always returns 'FAKE' or 'REAL'
 
 # ------------------------------------------------------------
 # STREAMLIT PAGE CONFIGURATION
@@ -60,8 +60,6 @@ st.set_page_config(
     layout="centered"
 )
 
-# Logo + Title (optional, uncomment if logo.png exists)
-# st.image("logo.png", width=120)
 st.title("📰 Fake News Detector")
 st.write("Analyze any headline or full article to detect if it's fake or real.")
 
@@ -102,7 +100,7 @@ def generate_advice(prediction):
         )
 
 # ------------------------------------------------------------
-# EXTERNAL SOURCES FUNCTION
+# EXTERNAL LINKS FUNCTION
 # ------------------------------------------------------------
 def generate_links(query):
     encoded = urllib.parse.quote(query)
@@ -134,7 +132,7 @@ if st.button("🔍 Analyze"):
     if not user_input.strip():
         st.warning("⚠️ Please enter some text first.")
     else:
-        # Prediction using Orange Text Mining
+        # Orange Text Mining Prediction
         prediction = orange_predict(user_input)
 
         # Show Prediction
