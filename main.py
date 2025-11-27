@@ -1,135 +1,87 @@
 import streamlit as st
-import pandas as pd
-import urllib.parse
-from Orange.data import Table, Domain, StringVariable
-from Orange.classification import NaiveBayesLearner
-from Orange.preprocess.text import preprocess_strings
 
-# ------------------------------------------------------------
-# PAGE CONFIG
-# ------------------------------------------------------------
-st.set_page_config(
-    page_title="Fake News Detector",
-    page_icon="📰",
-    layout="centered"
-)
 
-st.title("📰 Fake News Detector")
-st.write("Enter a headline or article to detect if it is Real or Fake.")
+import streamlit as st
 
-# ------------------------------------------------------------
-# LOAD DATA
-# ------------------------------------------------------------
-@st.cache_data
-def load_data():
-    fake = pd.read_csv("data/Fake.csv")
-    true = pd.read_csv("data/True.csv")
-    fake["class"] = "FAKE"
-    true["class"] = "REAL"
-    data = pd.concat([fake, true], ignore_index=True)
-    data["text"] = data["text"].astype(str)
-    return data
+st.set_page_config(page_title="Fake News Detector", page_icon="📰")
 
-data = load_data()
+st.title("📰 Fake News Detection App")
+st.write("Enter a headline and article text, and the app will predict whether it appears Real or Fake.")
 
-# ------------------------------------------------------------
-# CREATE ORANGE DOMAIN AND TABLE
-# ------------------------------------------------------------
-domain = Domain([StringVariable("text")], class_vars=StringVariable("class"))
-training_data = Table.from_list(domain, data[["text", "class"]].values.tolist())
 
-# Preprocess text
-training_data.X = preprocess_strings(training_data.X)
+# -----------------------------
+# SIMPLE RULE-BASED CLASSIFIER
+# -----------------------------
+def classify_news(headline, article):
+    text = (headline + " " + article).lower()
 
-# Train Naive Bayes
-nb_model = NaiveBayesLearner()(training_data)
+    fake_keywords = [
+        "shocking", "secret", "breaking!!!", "miracle", 
+        "unbelievable", "banned", "hidden truth", "exposed",
+        "100% guarantee", "cure", "conspiracy"
+    ]
 
-# ------------------------------------------------------------
-# PREDICTION FUNCTION
-# ------------------------------------------------------------
-def orange_predict(text):
-    processed = preprocess_strings([text])
-    test_table = Table(domain, processed)
-    pred = nb_model(test_table)
-    return str(pred[0].value)
+    score = 0
+    for word in fake_keywords:
+        if word in text:
+            score += 1
 
-# ------------------------------------------------------------
-# REASONING FUNCTION
-# ------------------------------------------------------------
-def generate_reasoning(prediction):
-    if prediction == "FAKE":
-        return (
-            "- Overly dramatic or sensational language.\n"
-            "- Claims lack credible or verifiable sources.\n"
-            "- Exaggerated or absolute terms are used.\n"
-            "- Information may be manipulated or lack context."
-        )
+    if score >= 2:
+        prediction = "Fake"
+        reasoning = "The text contains multiple suspicious or sensational keywords commonly used in misleading content."
+    elif score == 1:
+        prediction = "Possibly Fake"
+        reasoning = "The text contains at least one sensational keyword, which may indicate misinformation."
     else:
-        return (
-            "- Balanced and factual language.\n"
-            "- Claims seem grounded with context.\n"
-            "- Avoids exaggerated terms.\n"
-            "- Likely authentic information."
-        )
+        prediction = "Real"
+        reasoning = "No major signs of sensational or misleading keywords were detected in the text."
 
-# ------------------------------------------------------------
-# ADVICE FUNCTION
-# ------------------------------------------------------------
-def generate_advice(prediction):
-    if prediction == "FAKE":
-        return "Do not share this content. Verify via BBC Reality Check, AFP Fact Check, Alt News, or BOOMLive."
-    else:
-        return "Even though it looks real, always verify the source before sharing."
+    return prediction, reasoning
 
-# ------------------------------------------------------------
-# EXTERNAL LINKS FUNCTION
-# ------------------------------------------------------------
-def generate_links(query):
-    encoded = urllib.parse.quote(query)
-    return {
-        "Google News Search": f"https://news.google.com/search?q={encoded}",
-        "BBC Search": f"https://www.bbc.co.uk/search?q={encoded}",
-        "Alt News Fact Check": f"https://www.altnews.in/?s={encoded}",
-        "BOOMLive Fact Check": f"https://www.boomlive.in/search?query={encoded}"
-    }
 
-# ------------------------------------------------------------
-# USER INPUT
-# ------------------------------------------------------------
-st.subheader("📝 Enter News Content")
+# -----------------------------
+# STREAMLIT INPUT AREA
+# -----------------------------
+st.header("📝 Enter News Content")
+
 headline = st.text_input("News Headline")
 article = st.text_area("Article Text", height=200)
-
-# ------------------------------------------------------------
-# ANALYZE BUTTON
-# ------------------------------------------------------------
-if st.button("🔍 Analyze"):
-    if not headline.strip() and not article.strip():
-        st.warning("⚠️ Please enter headline or article text.")
+‘
+if st.button("Analyze"):
+    if not headline.strip() or not article.strip():
+        st.warning("Please enter both a headline and article text.")
     else:
-        full_text = headline + " " + article
-        prediction = orange_predict(full_text)
+        # run the classifier
+        prediction, reasoning = classify_news(headline, article)
 
-        # Prediction result
-        st.subheader("🧪 Prediction Result")
-        if prediction == "FAKE":
-            st.error("❌ This news appears to be FAKE.")
+        # Display results
+        st.subheader("🔍 Prediction")
+        if prediction == "Fake":
+            st.error("❌ FAKE")
+        elif prediction == "Possibly Fake":
+            st.warning("⚠️ POSSIBLY FAKE")
         else:
-            st.success("✔ This news appears to be REAL.")
+            st.success("✔️ REAL")
 
-        # Reasoning
-        st.subheader("🧠 Detailed Reasoning")
-        st.write(generate_reasoning(prediction))
+        st.subheader("🧠 Reasoning")
+        st.write(reasoning)
 
-        # Advice
         st.subheader("💡 Advice")
-        st.info(generate_advice(prediction))
+        st.write("""
+        - Verify the claim using trusted fact-checking organizations  
+        - Avoid sharing content without confirming accuracy  
+        - Check if credible sources are reporting the same information  
+        """)
 
-        # External Links
-        st.subheader("🌍 External Fact-Checking Sources")
-        links = generate_links(full_text)
-        for name, url in links.items():
-            st.write(f"- [{name}]({url})")
+        # External Sources (clickable)
+        st.subheader("🔗 External Fact-Checking Sources")
+        st.markdown("""
+        - [Snopes](https://www.snopes.com/)  
+        - [PolitiFact](https://www.politifact.com/)  
+        - [Reuters Fact Check](https://www.reuters.com/fact-check/)  
+        - [AFP Fact Check](https://factcheck.afp.com/)  
+        - [Google Fact Check Explorer](https://toolbox.google.com/factcheck/explorer)  
+        """)
 
-        # Thank you message
-        st.success("🙏 THANK YOU FOR USING THIS APP! Stay aware, stay smart, stay safe ❤️")
+        st.info("This is a simple rule-based model. For real accuracy, connect a trained ML model.")
+
