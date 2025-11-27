@@ -84,4 +84,3 @@ if st.button("Analyze"):
         """)
 
         st.info("This is a simple rule-based model. For real accuracy, connect a trained ML model.")
-
