@@ -1,8 +1,1 @@
-pandas
 streamlit
-scikit-learn
-joblib
-numpy
-orange3
-orange-text-mining
-tensorflow
