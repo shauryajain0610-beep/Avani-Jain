@@ -9,8 +9,11 @@ st.set_page_config(page_title="Fake News Detector", page_icon="📰")
 # -----------------------------
 # DISPLAY LOGO
 # -----------------------------
-logo = Image.open("logo.png")
-st.image(logo, width=120)  # Adjust width if needed
+try:
+    logo = Image.open("logo.png")
+    st.image(logo, width=120)  # Adjust width if needed
+except:
+    st.warning("Logo not found. Make sure 'logo.png' is in the same folder.")
 
 # -----------------------------
 # APP TITLE & DESCRIPTION
@@ -71,49 +74,46 @@ if st.button("Analyze"):
         if prediction == "Fake":
             reasoning = "The text contains several sensational or misleading keywords, which indicate a high likelihood of misinformation."
             advice = """
-            ❌ **Advice if Fake:**  
-            - Immediately verify using trusted fact-checking sites  
-            - Do NOT share this information unless verified  
-            - Look for official government or credible news sources  
-            """
+❌ **Advice if Fake:**  
+- Immediately verify using trusted fact-checking sites  
+- Do NOT share this information unless verified  
+- Look for official government or credible news sources  
+"""
             sources = """
-            - [Alt News](https://www.altnews.in/)  
-            - [BOOM Fact Check](https://www.boomlive.in/)  
-            - [Factly](https://factly.in/)  
-            """
-
+- [Alt News](https://www.altnews.in/)  
+- [BOOM Fact Check](https://www.boomlive.in/)  
+- [Factly](https://factly.in/)  
+"""
         elif prediction == "Possibly Fake":
             reasoning = "At least one suspicious keyword is detected. It may or may not be accurate, but requires verification."
             advice = """
-            ⚠ **Advice if Possibly Fake:**  
-            - Cross-check with multiple reliable news outlets  
-            - Check publication time and author credibility  
-            - Search if reputed media outlets covered the same story  
-            """
+⚠ **Advice if Possibly Fake:**  
+- Cross-check with multiple reliable news outlets  
+- Check publication time and author credibility  
+- Search if reputed media outlets covered the same story  
+"""
             sources = """
-            - [Google Fact Check Explorer](https://toolbox.google.com/factcheck/explorer)  
-            - [Snopes](https://www.snopes.com/)  
-            """
-
+- [Google Fact Check Explorer](https://toolbox.google.com/factcheck/explorer)  
+- [Snopes](https://www.snopes.com/)  
+"""
         else:
             reasoning = "There are no common signals of misinformation or exaggerated keywords detected."
             advice = """
-            ✔ **Advice if Real:**  
-            - Still check original source for any updates  
-            - Share responsibly from official/reputed outlets  
-            - Verify facts from authentic government or national agencies  
-            """
+✔ **Advice if Real:**  
+- Still check original source for any updates  
+- Share responsibly from official/reputed outlets  
+- Verify facts from authentic government or national agencies  
+"""
             sources = """
-            - [Reuters Official News](https://www.reuters.com/)  
-            - [BBC News](https://www.bbc.com/)  
-            - [The Hindu](https://www.thehindu.com/)  
-            """
+- [Reuters Official News](https://www.reuters.com/)  
+- [BBC News](https://www.bbc.com/)  
+- [The Hindu](https://www.thehindu.com/)  
+"""
 
         # -----------------------------
         # DISPLAY RESULTS
         # -----------------------------
         st.subheader("🔍 Prediction")
-
         if prediction == "Fake":
             st.error("❌ FAKE NEWS")
         elif prediction == "Possibly Fake":
@@ -130,4 +130,7 @@ if st.button("Analyze"):
         st.subheader("🔗 Trusted Verification Sources")
         st.markdown(sources)
 
-        st.info("This is a simple rule-based model. Connect a trained ML model for real accuracy.")
+# -----------------------------
+# INFO MESSAGE
+# -----------------------------
+st.info("This is a simple rule-based model. Connect a trained ML model for real accuracy.")
