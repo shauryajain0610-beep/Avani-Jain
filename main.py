@@ -1,5 +1,6 @@
 import streamlit as st
 import pickle
+import os
 
 # -----------------------------
 # PAGE CONFIG
@@ -9,12 +10,28 @@ st.title("📰 Fake News Detection App")
 st.write("Enter a headline or full article and analyze whether the content is Real or Fake.")
 
 # -----------------------------
+# MODEL PATHS
+# -----------------------------
+MODEL_PATH = "models/fake_news_model.pkl"
+VECTORIZER_PATH = "models/vectorizer.pkl"
+
+# -----------------------------
+# CHECK IF MODEL FILES EXIST
+# -----------------------------
+if not os.path.exists(MODEL_PATH) or not os.path.exists(VECTORIZER_PATH):
+    st.error(
+        "❌ Model files not found! Please make sure 'fake_news_model.pkl' and 'vectorizer.pkl' "
+        "are inside the 'models/' folder."
+    )
+    st.stop()  # Stop execution if files are missing
+
+# -----------------------------
 # LOAD ML MODEL & VECTORIZER
 # -----------------------------
-with open("fake_news_model.pkl", "rb") as f:
+with open(MODEL_PATH, "rb") as f:
     model = pickle.load(f)
 
-with open("vectorizer.pkl", "rb") as f:
+with open(VECTORIZER_PATH, "rb") as f:
     vectorizer = pickle.load(f)
 
 # -----------------------------
