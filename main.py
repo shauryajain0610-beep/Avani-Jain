@@ -12,8 +12,8 @@ st.write("Enter a headline or full article and analyze whether the content is Re
 # -----------------------------
 # MODEL PATHS
 # -----------------------------
-MODEL_PATH = "models/fake_news_model.pkl"
-VECTORIZER_PATH = "models/vectorizer.pkl"
+MODEL_PATH = "C:\fake_news_app\models\fake_news_model.pkl"
+VECTORIZER_PATH = "C:\fake_news_app\models\vectorizer.pkl"
 
 # -----------------------------
 # CHECK IF MODEL FILES EXIST
