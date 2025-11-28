@@ -1,31 +1,31 @@
 import streamlit as st
+import pickle
 
+# -----------------------------
+# PAGE CONFIG
+# -----------------------------
 st.set_page_config(page_title="Fake News Detector", page_icon="📰")
-
 st.title("📰 Fake News Detection App")
-st.write("Choose input type and analyze whether the content seems Real or Fake.")
+st.write("Enter a headline or full article and analyze whether the content is Real or Fake.")
 
 # -----------------------------
-# SIMPLE RULE-BASED CLASSIFIER
+# LOAD ML MODEL & VECTORIZER
 # -----------------------------
-def classify_news(text):
-    text = text.lower()
+with open("fake_news_model.pkl", "rb") as f:
+    model = pickle.load(f)
 
-    fake_keywords = [
-        "shocking", "secret", "breaking!!!", "miracle",
-        "unbelievable", "banned", "hidden truth", "exposed",
-        "100% guarantee", "cure", "conspiracy"
-    ]
+with open("vectorizer.pkl", "rb") as f:
+    vectorizer = pickle.load(f)
 
-    score = sum(word in text for word in fake_keywords)
-
-    if score >= 2:
-        return "Fake"
-    elif score == 1:
-        return "Possibly Fake"
-    else:
-        return "Real"
-
+# -----------------------------
+# ML CLASSIFIER FUNCTION
+# -----------------------------
+def classify_ml(text):
+    tfidf = vectorizer.transform([text])
+    result = model.predict(tfidf)[0]
+    proba = model.predict_proba(tfidf)[0]
+    confidence = max(proba) * 100  # Confidence %
+    return "Real" if result == 1 else "Fake", confidence
 
 # -----------------------------
 # STREAMLIT INPUT AREA
@@ -42,73 +42,53 @@ else:
     headline = st.text_input("Headline (optional)")
     article = st.text_area("Enter Full Article Text", height=180)
 
+# -----------------------------
+# ANALYZE BUTTON
+# -----------------------------
 if st.button("Analyze"):
     combined_text = (headline + " " + article).strip()
 
     if not combined_text:
         st.warning("⚠ Please enter some text first.")
     else:
-        prediction = classify_news(combined_text)
+        prediction, confidence = classify_ml(combined_text)
 
         # -----------------------------
         # DYNAMIC REASONING & ADVICE
         # -----------------------------
         if prediction == "Fake":
-            reasoning = "The text contains several sensational or misleading keywords, which indicate a high likelihood of misinformation."
+            reasoning = "The ML model predicts this content is likely fake based on patterns learned from real and fake news datasets."
             advice = """
             ❌ **Advice if Fake:**  
-            - Immediately verify using trusted fact-checking sites  
-            - Do NOT share this information unless verified  
+            - Verify using trusted fact-checking sites  
+            - Do NOT share this content unless confirmed  
             - Look for official government or credible news sources  
             """
-
             sources = """
             - [Alt News](https://www.altnews.in/)  
             - [BOOM Fact Check](https://www.boomlive.in/)  
             - [Factly](https://factly.in/)  
             """
-
-        elif prediction == "Possibly Fake":
-            reasoning = "At least one suspicious keyword is detected. It may or may not be accurate, but requires verification."
-            advice = """
-            ⚠ **Advice if Possibly Fake:**  
-            - Cross-check with multiple reliable news outlets  
-            - Check publication time and author credibility  
-            - Search if reputed media outlets covered the same story  
-            """
-
-            sources = """
-            - [Google Fact Check Explorer](https://toolbox.google.com/factcheck/explorer)  
-            - [Snopes](https://www.snopes.com/)  
-            """
+            st.error(f"❌ FAKE NEWS ({confidence:.2f}% confidence)")
 
         else:
-            reasoning = "There are no common signals of misinformation or exaggerated keywords detected."
+            reasoning = "The ML model predicts this content is likely real based on patterns learned from real and fake news datasets."
             advice = """
             ✔ **Advice if Real:**  
-            - Still check original source for any updates  
+            - Check the original source for any updates  
             - Share responsibly from official/reputed outlets  
             - Verify facts from authentic government or national agencies  
             """
-
             sources = """
-            - [Reuters Official News](https://www.reuters.com/)  
+            - [Reuters](https://www.reuters.com/)  
             - [BBC News](https://www.bbc.com/)  
             - [The Hindu](https://www.thehindu.com/)  
             """
+            st.success(f"✔ REAL NEWS ({confidence:.2f}% confidence)")
 
         # -----------------------------
         # DISPLAY RESULTS
         # -----------------------------
-        st.subheader("🔍 Prediction")
-
-        if prediction == "Fake":
-            st.error("❌ FAKE NEWS")
-        elif prediction == "Possibly Fake":
-            st.warning("⚠️ POSSIBLY FAKE")
-        else:
-            st.success("✔ REAL NEWS")
-
         st.subheader("🧠 Reasoning")
         st.write(reasoning)
 
@@ -118,4 +98,4 @@ if st.button("Analyze"):
         st.subheader("🔗 Trusted Verification Sources")
         st.markdown(sources)
 
-        st.info("This rule-based model is for demonstration. Connect ML model for real accuracy.")
+        st.info("This ML model is trained on Kaggle True vs Fake news datasets. Always verify important news from multiple sources.")
